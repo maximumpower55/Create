@@ -101,7 +101,7 @@ public class SchematicRenderer {
 			if (state.getRenderShape() == RenderShape.MODEL) {
 				BakedModel model = CatnipClientServices.CLIENT_HOOKS.filterModelForRenderType(state, dispatcher.getBlockModel(state), layer);
 				if (model != null)
-					sbbBuilder.renderBlock(renderWorld, model, state, pos, poseStack, random);
+					sbbBuilder.bufferBlock(renderWorld, model, state, pos, poseStack, random);
 			}
 		}
 		ModelBlockRenderer.clearCache();
