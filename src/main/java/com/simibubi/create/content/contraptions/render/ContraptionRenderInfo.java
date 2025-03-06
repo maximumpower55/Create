@@ -6,19 +6,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.Contraption.RenderedBlocks;
 import com.simibubi.create.content.contraptions.ContraptionWorld;
-import com.simibubi.create.foundation.render.fabric.LayerFilteringBakedModel;
 import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
 
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
+import net.createmod.catnip.platform.CatnipClientServices;
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperByteBufferCache;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -118,20 +116,9 @@ public class ContraptionRenderInfo {
 		for (BlockPos pos : blocks.positions()) {
 			BlockState state = blocks.lookup().apply(pos);
 			if (state.getRenderShape() == RenderShape.MODEL) {
-				BakedModel model = dispatcher.getBlockModel(state);
-				if (model.isVanillaAdapter()) {
-					if (ItemBlockRenderTypes.getChunkRenderType(state) != layer) {
-						model = null;
-					}
-				} else {
-					model = LayerFilteringBakedModel.wrap(model, layer);
-				}
-				if (model != null) {
-					// FIXME HIGH LOGISTICS
-//					model = shadeSeparatingWrapper.wrapModel(model);
-					dispatcher.getModelRenderer()
-							.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random, state.getSeed(pos), OverlayTexture.NO_OVERLAY);
-				}
+				BakedModel model = CatnipClientServices.CLIENT_HOOKS.filterModelForRenderType(state, dispatcher.getBlockModel(state), layer);
+				if (model != null)
+					sbbBuilder.renderBlock(renderWorld, model, state, pos, poseStack, random);
 			}
 		}
 		ModelBlockRenderer.clearCache();

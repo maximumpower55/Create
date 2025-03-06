@@ -9,11 +9,14 @@ import com.simibubi.create.content.schematics.cannon.LaunchedItem.ForBelt;
 import com.simibubi.create.content.schematics.cannon.LaunchedItem.ForBlockState;
 import com.simibubi.create.content.schematics.cannon.LaunchedItem.ForEntity;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
-import com.simibubi.create.foundation.render.fabric.DefaultLayerFilteringBakedModel;
+
+import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.BlockRenderDispatcherAccessor;
+import io.github.fabricators_of_create.porting_lib.models.virtual.FixedLightBakedModel;
 
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.model.baked.EmptyVirtualBlockGetter;
 import net.createmod.catnip.render.CachedBuffers;
+import net.createmod.catnip.render.DefaultLayerFilteringBakedModel;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -31,9 +34,6 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-
-import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.BlockRenderDispatcherAccessor;
-import io.github.fabricators_of_create.porting_lib.models.virtual.FixedLightBakedModel;
 
 public class SchematicannonRenderer extends SafeBlockEntityRenderer<SchematicannonBlockEntity> {
 

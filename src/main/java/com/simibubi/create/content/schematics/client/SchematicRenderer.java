@@ -5,18 +5,16 @@ import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.render.BlockEntityRenderHelper;
-import com.simibubi.create.foundation.render.fabric.LayerFilteringBakedModel;
 
 import net.createmod.catnip.levelWrappers.SchematicLevel;
+import net.createmod.catnip.platform.CatnipClientServices;
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -101,26 +99,9 @@ public class SchematicRenderer {
 			BlockState state = renderWorld.getBlockState(pos);
 
 			if (state.getRenderShape() == RenderShape.MODEL) {
-				BakedModel model = dispatcher.getBlockModel(state);
-				long seed = state.getSeed(pos);
-				random.setSeed(seed);
-				if (model.isVanillaAdapter()) {
-					if (ItemBlockRenderTypes.getChunkRenderType(state) != layer) {
-						continue;
-					}
-				} else {
-					model = LayerFilteringBakedModel.wrap(model, layer);
-				}
-				// FIXME HIGH LOGISTICS
-//				model = shadeSeparatingWrapper.wrapModel(model);
-
-				poseStack.pushPose();
-				poseStack.translate(localPos.getX(), localPos.getY(), localPos.getZ());
-
-				renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random,
-						seed, OverlayTexture.NO_OVERLAY);
-
-				poseStack.popPose();
+				BakedModel model = CatnipClientServices.CLIENT_HOOKS.filterModelForRenderType(state, dispatcher.getBlockModel(state), layer);
+				if (model != null)
+					sbbBuilder.renderBlock(renderWorld, model, state, pos, poseStack, random);
 			}
 		}
 		ModelBlockRenderer.clearCache();

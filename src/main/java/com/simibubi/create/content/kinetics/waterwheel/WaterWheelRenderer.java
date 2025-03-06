@@ -71,7 +71,7 @@ public class WaterWheelRenderer<T extends WaterWheelBlockEntity> extends Kinetic
 				dir = state1.getValue(WaterWheelBlock.FACING);
 			}
 			PoseStack transform = CachedBuffers.rotateToFaceVertical(dir).get();
-			return SuperBufferFactory.getInstance().createForBlock(model, Blocks.AIR.defaultBlockState(), transform);
+			return SuperBufferFactory.INSTANCE.createForBlock(model, Blocks.AIR.defaultBlockState(), transform);
 		});
 	}
 
