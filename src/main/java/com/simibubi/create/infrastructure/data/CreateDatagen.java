@@ -33,7 +33,7 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 	public void onInitializeDataGenerator(FabricDataGenerator generator) {
 		ExistingFileHelper helper = ExistingFileHelper.withResourcesFromArg();
 		FabricDataGenerator.Pack pack = generator.createPack();
-		Create.REGISTRATE.setupDatagen(pack, helper);
+		Create.registrate().setupDatagen(pack, helper);
 		gatherData(pack, helper);
 	}
 
@@ -69,7 +69,7 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 	private static void addExtraRegistrateData() {
 		CreateRegistrateTags.addGenerators();
 
-		Create.REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
+		Create.registrate().addDataGenerator(ProviderType.LANG, provider -> {
 			BiConsumer<String, String> langConsumer = provider::add;
 
 			provideDefaultLang("interface", langConsumer);

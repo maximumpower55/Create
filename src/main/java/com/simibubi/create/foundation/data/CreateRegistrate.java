@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -25,6 +26,8 @@ import com.simibubi.create.foundation.block.connected.ConnectedTextureBehaviour;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRenderer;
 import com.simibubi.create.foundation.item.render.CustomRenderedItems;
+import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl;
+import com.simibubi.create.impl.registrate.CreateRegistrateRegistrationCallbackImpl.CallbackImpl;
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.BlockEntityBuilder.BlockEntityFactory;
@@ -108,9 +111,18 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 				TooltipModifier.REGISTRY.register(item, modifier);
 			});
 		}
-		if (currentTab != null) {
+		if (currentTab != null)
 			TAB_LOOKUP.put(entry, currentTab);
+
+		for (CallbackImpl<?> callback : CreateRegistrateRegistrationCallbackImpl.CALLBACKS_VIEW) {
+			String modId = callback.id().getNamespace();
+			String entryId = callback.id().getPath();
+			if (callback.registry().equals(type) && getModid().equals(modId) && name.equals(entryId)) {
+				//noinspection unchecked
+				((Consumer<T>) callback.callback()).accept(entry.get());
+			}
 		}
+
 		return entry;
 	}
 

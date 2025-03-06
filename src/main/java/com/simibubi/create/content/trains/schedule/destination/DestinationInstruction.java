@@ -2,14 +2,8 @@ package com.simibubi.create.content.trains.schedule.destination;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nullable;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
-import net.minecraft.world.level.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -30,6 +24,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -95,14 +90,13 @@ public class DestinationInstruction extends TextScheduleInstruction {
 			return null;
 		}
 
-		try {
-			for (GlobalStation globalStation : train.graph.getPoints(EdgePointType.STATION)) {
-				if (!globalStation.name.matches(regex))
-					continue;
-				anyMatch = true;
-				validStations.add(globalStation);
-			}
-		} catch (PatternSyntaxException ignored) {}
+
+		for (GlobalStation globalStation : train.graph.getPoints(EdgePointType.STATION)) {
+			if (!globalStation.name.matches(regex))
+				continue;
+			anyMatch = true;
+			validStations.add(globalStation);
+		}
 
 		DiscoveredPath best = train.navigation.findPathTo(validStations, Double.MAX_VALUE);
 		if (best == null) {

@@ -27,6 +27,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,6 +43,8 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 
 	public WeakReference<PoweredShaftBlockEntity> target;
 	public WeakReference<FluidTankBlockEntity> source;
+
+	float prevAngle = 0;
 
 	public SteamEngineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -72,7 +75,7 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 		FluidTankBlockEntity tank = getTank();
 		PoweredShaftBlockEntity shaft = getShaft();
 
-		if (tank == null || shaft == null) {
+		if (tank == null || shaft == null || !isValid()) {
 			if (level.isClientSide())
 				return;
 			if (shaft == null)
@@ -173,7 +176,15 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 		return tank.getControllerBE();
 	}
 
-	float prevAngle = 0;
+	public boolean isValid() {
+		Direction dir = SteamEngineBlock.getConnectedDirection(getBlockState()).getOpposite();
+
+		Level level = getLevel();
+		if (level == null)
+			return false;
+
+		return level.getBlockState(getBlockPos().relative(dir)).is(AllBlocks.FLUID_TANK.get());
+	}
 
 	@Environment(EnvType.CLIENT)
 	private void spawnParticles() {

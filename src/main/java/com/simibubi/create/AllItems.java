@@ -4,7 +4,6 @@ import static com.simibubi.create.AllTags.AllItemTags.CREATE_INGOTS;
 import static com.simibubi.create.AllTags.AllItemTags.CRUSHED_RAW_MATERIALS;
 import static com.simibubi.create.AllTags.AllItemTags.PLATES;
 import static com.simibubi.create.AllTags.forgeItemTag;
-import static com.simibubi.create.Create.REGISTRATE;
 import static com.simibubi.create.foundation.data.recipe.CompatMetals.ALUMINUM;
 import static com.simibubi.create.foundation.data.recipe.CompatMetals.LEAD;
 import static com.simibubi.create.foundation.data.recipe.CompatMetals.NICKEL;
@@ -98,6 +97,7 @@ import net.fabricmc.fabric.api.registry.FuelRegistry;
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 public class AllItems {
+	private static final CreateRegistrate REGISTRATE = Create.registrate();
 
 	static {
 		REGISTRATE.setCreativeTab(AllCreativeModeTabs.BASE_CREATIVE_TAB.key());

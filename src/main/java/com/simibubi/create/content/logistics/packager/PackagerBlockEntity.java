@@ -12,9 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
+import com.simibubi.create.api.unpacking.UnpackingHandler;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
-import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
-import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity.Inventory;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.crate.BottomlessItemHandler;
@@ -29,7 +28,6 @@ import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlockEntit
 import com.simibubi.create.content.logistics.packagerLink.RequestPromiseQueue;
 import com.simibubi.create.content.logistics.packagerLink.WiFiEffectPacket;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
-import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -61,7 +59,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -344,85 +341,36 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		if (animationTicks > 0)
 			return false;
 
+		Objects.requireNonNull(this.level);
+
 		ItemStackHandler contents = PackageItem.getContents(box);
+		List<ItemStack> items = ItemHelper.getNonEmptyStacks(contents);
+		if (items.isEmpty())
+			return true;
+
 		PackageOrder orderContext = PackageItem.getOrderContext(box);
-		Storage<ItemVariant> targetInv = targetInventory.getInventory();
-		BlockEntity targetBE =
-			level.getBlockEntity(worldPosition.relative(getBlockState().getOptionalValue(PackagerBlock.FACING)
-				.orElse(Direction.UP)
-				.getOpposite()));
 
-		if (targetInv == null)
-			return false;
+		Direction facing = getBlockState().getOptionalValue(PackagerBlock.FACING).orElse(Direction.UP);
+		BlockPos target = worldPosition.relative(facing.getOpposite());
+		BlockState targetState = level.getBlockState(target);
 
-		if (targetBE instanceof BasinBlockEntity basin)
-			basin.inputInventory.packagerMode = true;
+			UnpackingHandler handler = UnpackingHandler.REGISTRY.get(targetState);
+		UnpackingHandler toUse = handler != null ? handler : UnpackingHandler.DEFAULT;
 
-		// Follow crafting arrangement
-		if (targetBE instanceof MechanicalCrafterBlockEntity crafter && orderContext != null) {
-			return this.unwrapIntoCrafter(crafter, contents, orderContext, ctx);
-		}
+		// fabric: copy the items to actually unpack later
+		List<ItemStack> copy = items.stream().map(ItemStack::copy).toList();
 
-		try (Transaction t = ctx.openNested()) {
-			for (int i = 0; i < contents.getSlotCount(); i++) {
-				ItemStack stack = contents.getStackInSlot(i);
-				if (stack.isEmpty())
-					continue;
+		// note: handler may modify the passed items
+		boolean unpacked = toUse.unpack(level, target, targetState, facing, items, orderContext, true);
 
-				long inserted = targetInv.insert(ItemVariant.of(stack), stack.getCount(), t);
-				if (inserted != stack.getCount()) {
-					return false;
-				}
-			}
-			t.commit();
-		} finally {
-			if (targetBE instanceof BasinBlockEntity basin) {
-				basin.inputInventory.packagerMode = false;
-			}
-		}
-
-		TransactionCallback.onSuccess(ctx, () -> {
-			if (targetBE instanceof MechanicalCrafterBlockEntity mcbe)
-				mcbe.checkCompletedRecipe(true);
-
-			previouslyUnwrapped = box;
-			animationInward = true;
-			animationTicks = CYCLE;
-			notifyUpdate();
-		});
-
-		return true;
-	}
-
-	private boolean unwrapIntoCrafter(MechanicalCrafterBlockEntity be, ItemStackHandler box, PackageOrder order, TransactionContext ctx) {
-		CombinedStorage<ItemVariant, Inventory> combined = be.input.getItemHandler(be.getLevel(), be.getBlockPos());
-		if (combined == null)
-			return false;
-
-		try (Transaction t = ctx.openNested()) {
-			for (int crafter = 0; crafter < combined.parts.size(); crafter++) {
-				Inventory storage = combined.parts.get(crafter);
-
-				for (int slot = 0; slot < box.getSlotCount(); slot++) {
-					ItemStack toInsert = box.getStackInSlot(slot);
-					if (toInsert.isEmpty())
-						continue;
-
-					if (crafter < order.stacks().size()) {
-						BigItemStack targetStack = order.stacks().get(crafter);
-						if (targetStack.stack.isEmpty())
-							break;
-						if (!ItemHandlerHelper.canItemStacksStack(toInsert, targetStack.stack))
-							continue;
-
-						long inserted = storage.insert(ItemVariant.of(toInsert), toInsert.getCount(), ctx);
-						if (inserted != toInsert.getCount()) {
-							return false;
-						}
-					}
-				}
-			}
-			t.commit();
+		if (unpacked) {
+			TransactionCallback.onSuccess(ctx, () -> {
+				toUse.unpack(level, target, targetState, facing, copy, orderContext, false);
+				previouslyUnwrapped = box;
+				animationInward = true;
+				animationTicks = CYCLE;
+				notifyUpdate();
+			});
 		}
 
 		return true;
