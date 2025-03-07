@@ -14,7 +14,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 
 import net.createmod.catnip.animation.AnimationTickHolder;
-import net.createmod.catnip.render.DefaultLayerFilteringBakedModel;
+import net.createmod.catnip.render.DefaultBlendModeFilteringBakedModel;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -119,7 +119,7 @@ public class SymmetryHandler {
 				.get();
 			VertexConsumer builder = buffer.getBuffer(RenderType.solid());
 
-			model = DefaultLayerFilteringBakedModel.wrap(model);
+			model = DefaultBlendModeFilteringBakedModel.wrap(model);
 			mc.getBlockRenderer()
 				.getModelRenderer()
 				.tesselateBlock(player.level(), model, Blocks.AIR.defaultBlockState(), pos, ms, builder, true,

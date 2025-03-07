@@ -16,7 +16,7 @@ import io.github.fabricators_of_create.porting_lib.models.virtual.FixedLightBake
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.model.baked.EmptyVirtualBlockGetter;
 import net.createmod.catnip.render.CachedBuffers;
-import net.createmod.catnip.render.DefaultLayerFilteringBakedModel;
+import net.createmod.catnip.render.DefaultBlendModeFilteringBakedModel;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -194,7 +194,7 @@ public class SchematicannonRenderer extends SafeBlockEntityRenderer<Schematicann
 				switch (state.getRenderShape()) {
 					case MODEL -> {
 						BakedModel model = dispatcher.getBlockModel(state);
-						model = DefaultLayerFilteringBakedModel.wrap(model);
+						model = DefaultBlendModeFilteringBakedModel.wrap(model);
 						model = FixedLightBakedModel.wrap(model, light);
 						dispatcher.getModelRenderer()
 								.tesselateBlock(EmptyVirtualBlockGetter.FULL_DARK, model, state, BlockPos.ZERO, ms, buffer.getBuffer(ItemBlockRenderTypes.getRenderType(state, false)), false, RandomSource.create(), 42L, overlay);
